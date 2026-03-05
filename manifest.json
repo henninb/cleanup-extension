@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Cleanup Extension",
+  "version": "1.0.0",
+  "description": "Removes unwanted popups on loan servicing dashboard",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://loansphereservicingdigital.bkiconnect.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://cards.barclaycardus.com/*",
+        "https://www.barclaycardus.com/*"
+      ],
+      "js": ["barclaycard.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.americanexpress.com/*",
+        "https://global.americanexpress.com/*"
+      ],
+      "js": ["amex.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://mytargetcirclecard.target.com/*"
+      ],
+      "js": ["target.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://myaccounts.capitalone.com/*"
+      ],
+      "js": ["capitalone.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://connect.secure.wellsfargo.com/*"
+      ],
+      "js": ["wellsfargo.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
