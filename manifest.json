@@ -49,6 +49,20 @@
       ],
       "js": ["wellsfargo.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.invoicecloud.com/*"
+      ],
+      "js": ["invoicecloud.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://secure.bankofamerica.com/*"
+      ],
+      "js": ["bankofamerica.js"],
+      "run_at": "document_idle"
     }
   ]
 }

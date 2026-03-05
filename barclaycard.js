@@ -26,6 +26,17 @@ function removeAdserverTiles() {
   });
 }
 
+function removeAppStoreButtons() {
+  const btn = document.getElementById('button-style-apple');
+  if (btn) {
+    const container = btn.closest('.c-multimedia--contain-1btQT') || btn.closest('picture') || btn.parentElement;
+    if (container) {
+      container.remove();
+      console.log('[cleanup-extension] Removed app store buttons container');
+    }
+  }
+}
+
 function removeLogoutPromo() {
   document.querySelectorAll('div.logout[data-product-info]').forEach(el => {
     el.remove();
@@ -37,6 +48,7 @@ function cleanup() {
   uncheckRememberUsername();
   removeDownloadBanner();
   removeAdserverTiles();
+  removeAppStoreButtons();
   removeLogoutPromo();
 }
 
@@ -49,6 +61,7 @@ const observer = new MutationObserver(() => {
   }
   removeDownloadBanner();
   removeAdserverTiles();
+  removeAppStoreButtons();
   removeLogoutPromo();
 });
 
