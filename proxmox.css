@@ -1,0 +1,4 @@
+.x-message-box:has(.x-message-box-warning),
+.x-css-shadow[data-sticky="true"] {
+  display: none !important;
+}

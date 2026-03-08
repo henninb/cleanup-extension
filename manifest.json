@@ -63,6 +63,16 @@
       ],
       "js": ["bankofamerica.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://proxmox.bhenning.com/*",
+        "*://*/*:8006/*"
+      ],
+      "css": ["proxmox.css"],
+      "js": ["proxmox.js"],
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ]
 }
