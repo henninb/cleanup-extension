@@ -66,6 +66,13 @@
     },
     {
       "matches": [
+        "https://login.centerpointenergy.com/*"
+      ],
+      "js": ["centerpointenergy.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
         "*://proxmox.bhenning.com/*",
         "*://*/*:8006/*"
       ],
