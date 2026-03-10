@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Cleaner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      width: 380px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+    }
+    header {
+      background: #16213e;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #0f3460;
+    }
+    header h1 { font-size: 15px; font-weight: 600; color: #e94560; }
+    #total-badge {
+      background: #e94560;
+      color: #fff;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .section {
+      padding: 10px 16px;
+      border-bottom: 1px solid #0f3460;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cookie-list { max-height: 180px; overflow-y: auto; }
+    .cookie-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #0f3460;
+      gap: 6px;
+    }
+    .cookie-row:last-child { border-bottom: none; }
+    .cookie-name {
+      flex: 1;
+      font-family: monospace;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cookie-name.tracking { color: #e94560; }
+    .tag {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #e94560;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .tag.safe { background: #0f3460; color: #aaa; }
+    button.remove-btn {
+      background: none;
+      border: 1px solid #e94560;
+      color: #e94560;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    button.remove-btn:hover { background: #e94560; color: #fff; }
+    .log-row {
+      padding: 3px 0;
+      border-bottom: 1px solid #0f3460;
+      font-family: monospace;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #aaa;
+    }
+    .log-row span { color: #e94560; }
+    .log-row:last-child { border-bottom: none; }
+    .empty { color: #555; font-size: 12px; padding: 4px 0; }
+    footer {
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+    }
+    footer button {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #btn-remove-all { background: #e94560; color: #fff; font-weight: 600; }
+    #btn-remove-all:hover { background: #c73652; }
+    #btn-clear-log { background: #0f3460; color: #aaa; }
+    #btn-clear-log:hover { background: #16213e; color: #e0e0e0; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #1a1a2e; }
+    ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cookie Cleaner</h1>
+    <span id="total-badge">0 removed</span>
+  </header>
+
+  <div class="section">
+    <div class="section-title">
+      <span>Current Site Cookies</span>
+      <span id="site-domain" style="color:#555;font-size:11px;font-weight:400;"></span>
+    </div>
+    <div class="cookie-list" id="site-cookies">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      <span>Recently Auto-Removed</span>
+    </div>
+    <div class="cookie-list" id="removed-log">
+      <div class="empty">None yet</div>
+    </div>
+  </div>
+
+  <footer>
+    <button id="btn-remove-all">Remove Tracking Cookies</button>
+    <button id="btn-clear-log">Clear Log</button>
+  </footer>
+  <div style="padding: 6px 16px 10px; border-top: 1px solid #0f3460;">
+    <button id="btn-dashboard" style="width:100%;background:#0f3460;border:none;color:#aaa;padding:7px;border-radius:6px;font-size:12px;cursor:pointer;">
+      Open Dashboard ↗
+    </button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

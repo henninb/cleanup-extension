@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "Referer", "operation": "set", "value": "https://www.trackme.com" }
+      ]
+    },
+    "condition": {
+      "resourceTypes": [
+        "main_frame", "sub_frame", "stylesheet", "script", "image",
+        "font", "object", "xmlhttprequest", "ping", "csp_report",
+        "media", "websocket", "other"
+      ]
+    }
+  }
+]
