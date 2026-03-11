@@ -5,15 +5,11 @@
     "action": {
       "type": "modifyHeaders",
       "requestHeaders": [
-        { "header": "Referer", "operation": "set", "value": "https://www.trackme.com" }
+        { "header": "Referer", "operation": "remove" }
       ]
     },
     "condition": {
-      "resourceTypes": [
-        "main_frame", "sub_frame", "stylesheet", "script", "image",
-        "font", "object", "xmlhttprequest", "ping", "csp_report",
-        "media", "websocket", "other"
-      ]
+      "domainType": "thirdParty"
     }
   }
 ]
