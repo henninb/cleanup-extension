@@ -125,6 +125,20 @@ async function init() {
   document.getElementById('total-badge').textContent = `${stats.totalCount} removed`;
   renderLog(stats.log);
 
+  const { enabled } = await chrome.runtime.sendMessage({ type: 'GET_ENABLED' });
+  const toggle = document.getElementById('toggle-enabled');
+  const label = document.getElementById('toggle-label');
+  toggle.checked = enabled;
+  label.textContent = enabled ? 'ON' : 'OFF';
+  label.style.color = enabled ? '#27ae60' : '#888';
+
+  toggle.addEventListener('change', async () => {
+    const isEnabled = toggle.checked;
+    label.textContent = isEnabled ? 'ON' : 'OFF';
+    label.style.color = isEnabled ? '#27ae60' : '#888';
+    await chrome.runtime.sendMessage({ type: 'SET_ENABLED', enabled: isEnabled });
+  });
+
   document.getElementById('btn-remove-all').addEventListener('click', async () => {
     const trackingCookies = cookies.filter(c => isTracking(c.name));
     for (const c of trackingCookies) {

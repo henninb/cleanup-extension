@@ -94,14 +94,18 @@ chrome.cookies.onChanged.addListener((changeInfo) => {
   const cookie = changeInfo.cookie;
   if (!isTrackingCookie(cookie.name)) return;
 
-  const url = cookieUrl(cookie);
-  chrome.cookies.remove({ url, name: cookie.name }, () => {
-    if (chrome.runtime.lastError) {
-      console.warn(`[cookie-cleaner] Could not remove ${cookie.name}: ${chrome.runtime.lastError.message}`);
-      return;
-    }
-    console.log(`[cookie-cleaner] Removed tracking cookie: ${cookie.name} (${cookie.domain})`);
-    logRemoval(cookie);
+  chrome.storage.local.get(['enabled'], (data) => {
+    if (data.enabled === false) return;
+
+    const url = cookieUrl(cookie);
+    chrome.cookies.remove({ url, name: cookie.name }, () => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] Could not remove ${cookie.name}: ${chrome.runtime.lastError.message}`);
+        return;
+      }
+      console.log(`[cookie-cleaner] Removed tracking cookie: ${cookie.name} (${cookie.domain})`);
+      logRemoval(cookie);
+    });
   });
 });
 
@@ -151,6 +155,18 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     chrome.cookies.remove({ url: msg.url, name: msg.name }, () => {
       sendResponse({ ok: !chrome.runtime.lastError });
     });
+    return true;
+  }
+
+  if (msg.type === 'GET_ENABLED') {
+    chrome.storage.local.get(['enabled'], (data) => {
+      sendResponse({ enabled: data.enabled !== false });
+    });
+    return true;
+  }
+
+  if (msg.type === 'SET_ENABLED') {
+    chrome.storage.local.set({ enabled: msg.enabled }, () => sendResponse({ ok: true }));
     return true;
   }
 
