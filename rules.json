@@ -9,7 +9,44 @@
       ]
     },
     "condition": {
-      "domainType": "thirdParty"
+      "requestDomains": [
+        "google-analytics.com",
+        "doubleclick.net",
+        "googlesyndication.com",
+        "googleadservices.com",
+        "facebook.com",
+        "facebook.net",
+        "tiktok.com",
+        "tiktokv.com",
+        "mixpanel.com",
+        "hubspot.com",
+        "hs-analytics.net",
+        "hubapi.com",
+        "hotjar.com",
+        "pinterest.com",
+        "pinimg.com",
+        "omtrdc.net",
+        "2o7.net",
+        "demdex.net",
+        "bing.com",
+        "clarity.ms",
+        "adnxs.com",
+        "linkedin.com",
+        "segment.com",
+        "segment.io",
+        "intercom.io",
+        "intercom.com",
+        "criteo.com",
+        "criteo.net",
+        "amplitude.com",
+        "optimizely.com",
+        "branch.io",
+        "drift.com",
+        "zopim.com",
+        "yahoo.com",
+        "yimg.com",
+        "oath.com"
+      ]
     }
   }
 ]
