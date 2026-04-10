@@ -12,12 +12,12 @@ function selectTextAndClickNext() {
     console.log('[cleanup-extension] Selected Text message radio');
   }
 
-  // Find and click the Next button
+  // Find and click the Next button — search within the container to avoid
+  // accidentally matching unrelated submit/next buttons elsewhere on the page
   const nextBtn =
-    document.querySelector('button#ah-authcode-select-submit') ||
-    document.querySelector('button[id*="submit"]') ||
-    document.querySelector('button[id*="next"]') ||
-    Array.from(document.querySelectorAll('button')).find(
+    container.querySelector('button#ah-authcode-select-submit') ||
+    container.querySelector('button[type="submit"]') ||
+    Array.from(container.querySelectorAll('button')).find(
       b => /^\s*next\s*$/i.test(b.textContent)
     );
 

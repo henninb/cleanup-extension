@@ -56,36 +56,42 @@ function cookieUrl(cookie) {
   return `${scheme}://${domain}${cookie.path}`;
 }
 
+// Serialise all read-modify-write storage updates to prevent concurrent
+// onChanged events from overwriting each other's increments.
+let _logQueue = Promise.resolve();
+
 function logRemoval(cookie) {
-  const today = new Date().toISOString().slice(0, 10);
-  const domain = cookie.domain.replace(/^\./, '');
-  chrome.storage.local.get(['removedLog', 'totalCount', 'domainStats', 'nameStats', 'dailyStats'], (data) => {
-    const log = data.removedLog || [];
-    const domainStats = data.domainStats || {};
-    const nameStats = data.nameStats || {};
-    const dailyStats = data.dailyStats || {};
+  _logQueue = _logQueue.then(() => new Promise(resolve => {
+    const today = new Date().toISOString().slice(0, 10);
+    const domain = cookie.domain.replace(/^\./, '');
+    chrome.storage.local.get(['removedLog', 'totalCount', 'domainStats', 'nameStats', 'dailyStats'], (data) => {
+      const log = data.removedLog || [];
+      const domainStats = data.domainStats || {};
+      const nameStats = data.nameStats || {};
+      const dailyStats = data.dailyStats || {};
 
-    log.unshift({ name: cookie.name, domain, ts: Date.now() });
-    if (log.length > 500) log.length = 500;
+      log.unshift({ name: cookie.name, domain, ts: Date.now() });
+      if (log.length > 500) log.length = 500;
 
-    domainStats[domain] = (domainStats[domain] || 0) + 1;
-    nameStats[cookie.name] = (nameStats[cookie.name] || 0) + 1;
-    dailyStats[today] = (dailyStats[today] || 0) + 1;
+      domainStats[domain] = (domainStats[domain] || 0) + 1;
+      nameStats[cookie.name] = (nameStats[cookie.name] || 0) + 1;
+      dailyStats[today] = (dailyStats[today] || 0) + 1;
 
-    // Trim daily stats older than 30 days
-    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    for (const d of Object.keys(dailyStats)) {
-      if (d < cutoff) delete dailyStats[d];
-    }
+      // Trim daily stats older than 30 days
+      const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+      for (const d of Object.keys(dailyStats)) {
+        if (d < cutoff) delete dailyStats[d];
+      }
 
-    chrome.storage.local.set({
-      removedLog: log,
-      totalCount: (data.totalCount || 0) + 1,
-      domainStats,
-      nameStats,
-      dailyStats,
+      chrome.storage.local.set({
+        removedLog: log,
+        totalCount: (data.totalCount || 0) + 1,
+        domainStats,
+        nameStats,
+        dailyStats,
+      }, resolve);
     });
-  });
+  }));
 }
 
 chrome.cookies.onChanged.addListener((changeInfo) => {
@@ -137,12 +143,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msg.type === 'LS_EVENT') {
-    const today = new Date().toISOString().slice(0, 10);
-    chrome.storage.local.get(['lsTotalCount', 'lsKeyStats', 'dailyStats'], (data) => {
+    // Validate key: non-empty string, max 200 chars to prevent storage exhaustion
+    const key = typeof msg.key === 'string' && msg.key.length > 0 && msg.key.length <= 200
+      ? msg.key : null;
+    if (!key) return false;
+
+    chrome.storage.local.get(['lsTotalCount', 'lsKeyStats'], (data) => {
       const lsKeyStats = data.lsKeyStats || {};
-      const dailyStats = data.dailyStats || {};
-      lsKeyStats[msg.key] = (lsKeyStats[msg.key] || 0) + 1;
-      dailyStats[today] = (dailyStats[today] || 0); // keep cookie daily count separate
+      // Cap at 1000 unique keys to bound storage usage
+      if (!lsKeyStats[key] && Object.keys(lsKeyStats).length >= 1000) return;
+      lsKeyStats[key] = (lsKeyStats[key] || 0) + 1;
       chrome.storage.local.set({
         lsTotalCount: (data.lsTotalCount || 0) + 1,
         lsKeyStats,

@@ -50,7 +50,7 @@ function isTracking(key) {
 }
 
 function dispatch(action, key, store) {
-  window.postMessage({ type: MSG_TYPE, action, key, store }, '*');
+  window.postMessage({ type: MSG_TYPE, action, key, store }, location.origin || '*');
 }
 
 // ── Intercept setItem / getItem / removeItem on both storages ──
