@@ -9,6 +9,38 @@ function checkTerms() {
   }
 }
 
+function selectPayToday() {
+  // Strategy 1: radio input whose label text contains "pay today"
+  const labels = document.querySelectorAll('label');
+  for (const label of labels) {
+    if (/pay today/i.test(label.textContent)) {
+      const radio =
+        label.querySelector('input[type="radio"]') ||
+        (label.htmlFor && document.getElementById(label.htmlFor));
+      if (radio && !radio.checked) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[cleanup-extension] Selected Pay Today (radio)');
+        return true;
+      }
+      if (radio && radio.checked) return false; // already selected, nothing to do
+    }
+  }
+
+  // Strategy 2: button or tab element whose text is "pay today"
+  const candidates = document.querySelectorAll('button, [role="tab"], [role="radio"], .ic-payment-option');
+  for (const el of candidates) {
+    if (/pay today/i.test(el.textContent) && !el.dataset.cleanupSelected) {
+      el.dataset.cleanupSelected = 'true';
+      el.click();
+      console.log('[cleanup-extension] Clicked Pay Today (button/tab)');
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function clickProceedToPayment() {
   const btn = document.querySelector('a.ic-button-primary');
   if (btn && btn.textContent.includes('Proceed to Payment')) {
@@ -20,8 +52,9 @@ function clickProceedToPayment() {
   return false;
 }
 
-// Watch for "Proceed to Payment" appearing at any time
+// Watch for "Proceed to Payment" and "Pay Today" appearing at any time
 const observer = new MutationObserver(() => {
+  selectPayToday();
   checkTerms();
   clickProceedToPayment();
 });
@@ -47,6 +80,7 @@ function hookPaySelected() {
 }
 
 // Run immediately and via observer for dynamically loaded buttons
+selectPayToday();
 checkTerms();
 clickProceedToPayment();
 hookPaySelected();
