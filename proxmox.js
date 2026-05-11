@@ -29,10 +29,26 @@ function dismissSubscriptionPopup() {
   });
 }
 
-dismissSubscriptionPopup();
+try {
+  dismissSubscriptionPopup();
+} catch (err) {
+  console.warn('[cleanup-extension] proxmox.js init error:', err);
+}
 
-const observer = new MutationObserver(dismissSubscriptionPopup);
+const observer = new MutationObserver(() => {
+  try {
+    dismissSubscriptionPopup();
+  } catch (err) {
+    console.warn('[cleanup-extension] proxmox.js observer error:', err);
+  }
+});
 observer.observe(document.documentElement, { childList: true, subtree: true });
 
-const interval = setInterval(dismissSubscriptionPopup, 200);
+const interval = setInterval(() => {
+  try {
+    dismissSubscriptionPopup();
+  } catch (err) {
+    console.warn('[cleanup-extension] proxmox.js interval error:', err);
+  }
+}, 200);
 setTimeout(() => clearInterval(interval), 30000);

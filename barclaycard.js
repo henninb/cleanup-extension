@@ -52,17 +52,25 @@ function cleanup() {
   removeLogoutPromo();
 }
 
-cleanup();
+try {
+  cleanup();
+} catch (err) {
+  console.warn('[cleanup-extension] barclaycard.js init error:', err);
+}
 
 const observer = new MutationObserver(() => {
-  const checkbox = document.getElementById('rememberUserNameCheckbox');
-  if (checkbox && checkbox.checked) {
-    uncheckRememberUsername();
+  try {
+    const checkbox = document.getElementById('rememberUserNameCheckbox');
+    if (checkbox && checkbox.checked) {
+      uncheckRememberUsername();
+    }
+    removeDownloadBanner();
+    removeAdserverTiles();
+    removeAppStoreButtons();
+    removeLogoutPromo();
+  } catch (err) {
+    console.warn('[cleanup-extension] barclaycard.js observer error:', err);
   }
-  removeDownloadBanner();
-  removeAdserverTiles();
-  removeAppStoreButtons();
-  removeLogoutPromo();
 });
 
 observer.observe(document.documentElement, {
@@ -72,5 +80,9 @@ observer.observe(document.documentElement, {
   attributeFilter: ['checked']
 });
 
-setTimeout(cleanup, 500);
-setTimeout(cleanup, 1500);
+setTimeout(() => {
+  try { cleanup(); } catch (err) { console.warn('[cleanup-extension] barclaycard.js setTimeout error:', err); }
+}, 500);
+setTimeout(() => {
+  try { cleanup(); } catch (err) { console.warn('[cleanup-extension] barclaycard.js setTimeout error:', err); }
+}, 1500);

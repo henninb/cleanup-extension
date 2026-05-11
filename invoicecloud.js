@@ -54,9 +54,13 @@ function clickProceedToPayment() {
 
 // Watch for "Proceed to Payment" and "Pay Today" appearing at any time
 const observer = new MutationObserver(() => {
-  selectPayToday();
-  checkTerms();
-  clickProceedToPayment();
+  try {
+    selectPayToday();
+    checkTerms();
+    clickProceedToPayment();
+  } catch (err) {
+    console.warn('[cleanup-extension] invoicecloud.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {
@@ -72,22 +76,34 @@ function hookPaySelected() {
   if (payBtn && !payBtn.dataset.cleanupHooked) {
     payBtn.dataset.cleanupHooked = 'true';
     payBtn.addEventListener('click', () => {
-      checkTerms();
-      console.log('[cleanup-extension] Pay Selected clicked — watching for Proceed to Payment');
+      try {
+        checkTerms();
+        console.log('[cleanup-extension] Pay Selected clicked — watching for Proceed to Payment');
+      } catch (err) {
+        console.warn('[cleanup-extension] invoicecloud.js payBtn click error:', err);
+      }
     });
     console.log('[cleanup-extension] Hooked Pay Selected button');
   }
 }
 
 // Run immediately and via observer for dynamically loaded buttons
-selectPayToday();
-checkTerms();
-clickProceedToPayment();
-hookPaySelected();
+try {
+  selectPayToday();
+  checkTerms();
+  clickProceedToPayment();
+  hookPaySelected();
+} catch (err) {
+  console.warn('[cleanup-extension] invoicecloud.js init error:', err);
+}
 
 // Also hook the Pay Selected button if it loads later
 const hookObserver = new MutationObserver(() => {
-  hookPaySelected();
+  try {
+    hookPaySelected();
+  } catch (err) {
+    console.warn('[cleanup-extension] invoicecloud.js hookObserver error:', err);
+  }
 });
 
 hookObserver.observe(document.documentElement, {

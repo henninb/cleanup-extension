@@ -50,37 +50,53 @@ function isTracking(key) {
 }
 
 function dispatch(action, key, store) {
-  window.postMessage({ type: MSG_TYPE, action, key, store }, location.origin || '*');
+  try {
+    window.postMessage({ type: MSG_TYPE, action, key, store }, location.origin || '*');
+  } catch (err) {
+    console.warn('[cleanup-extension] dispatch postMessage error:', err);
+  }
 }
 
 // ── Intercept setItem / getItem / removeItem on both storages ──
 const _setItem = Storage.prototype.setItem;
 Storage.prototype.setItem = function (key, value) {
-  if (isTracking(key)) {
-    const store = this === sessionStorage ? 'sessionStorage' : 'localStorage';
-    console.debug(`[cleanup-extension] Blocked ${store}.setItem("${key}")`);
-    dispatch('blocked', key, store);
-    return;
+  try {
+    if (isTracking(key)) {
+      const store = this === sessionStorage ? 'sessionStorage' : 'localStorage';
+      console.debug(`[cleanup-extension] Blocked ${store}.setItem("${key}")`);
+      dispatch('blocked', key, store);
+      return;
+    }
+  } catch (err) {
+    console.warn('[cleanup-extension] setItem guard error:', err);
   }
   return _setItem.call(this, key, value);
 };
 
 const _getItem = Storage.prototype.getItem;
 Storage.prototype.getItem = function (key) {
-  if (isTracking(key)) return null;
+  try {
+    if (isTracking(key)) return null;
+  } catch (err) {
+    console.warn('[cleanup-extension] getItem guard error:', err);
+  }
   return _getItem.call(this, key);
 };
 
 // ── Purge any tracking keys that already exist ──
 function purge(storage, storeName) {
-  const keys = [];
-  for (let i = 0; i < storage.length; i++) keys.push(storage.key(i));
-  for (const key of keys) {
-    if (isTracking(key)) {
-      storage.removeItem(key);
-      console.debug(`[cleanup-extension] Purged ${storeName} key: "${key}"`);
-      dispatch('purged', key, storeName);
+  try {
+    const keys = [];
+    for (let i = 0; i < storage.length; i++) keys.push(storage.key(i));
+    for (const key of keys) {
+      if (isTracking(key)) {
+        storage.removeItem(key);
+        console.debug(`[cleanup-extension] Purged ${storeName} key: "${key}"`);
+        dispatch('purged', key, storeName);
+      }
     }
+  } catch (err) {
+    console.warn(`[cleanup-extension] purge ${storeName} error:`, err);
   }
 }
 

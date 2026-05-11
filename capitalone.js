@@ -7,10 +7,18 @@ function removeHeroBar() {
   });
 }
 
-removeHeroBar();
+try {
+  removeHeroBar();
+} catch (err) {
+  console.warn('[cleanup-extension] capitalone.js init error:', err);
+}
 
 const observer = new MutationObserver(() => {
-  removeHeroBar();
+  try {
+    removeHeroBar();
+  } catch (err) {
+    console.warn('[cleanup-extension] capitalone.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {

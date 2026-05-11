@@ -7,10 +7,18 @@ function removeDownloadAppBanner() {
   });
 }
 
-removeDownloadAppBanner();
+try {
+  removeDownloadAppBanner();
+} catch (err) {
+  console.warn('[cleanup-extension] target.js init error:', err);
+}
 
 const observer = new MutationObserver(() => {
-  removeDownloadAppBanner();
+  try {
+    removeDownloadAppBanner();
+  } catch (err) {
+    console.warn('[cleanup-extension] target.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {

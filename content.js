@@ -66,11 +66,22 @@ function cleanup() {
   removeNeighborhoodGridItem();
 }
 
-const observer = new MutationObserver(cleanup);
-
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
+const observer = new MutationObserver(() => {
+  try {
+    cleanup();
+  } catch (err) {
+    console.warn('[cleanup-extension] content.js observer error:', err);
+  }
 });
 
-cleanup();
+if (document.body) {
+  observer.observe(document.body, { childList: true, subtree: true });
+} else {
+  console.warn('[cleanup-extension] content.js: document.body not available');
+}
+
+try {
+  cleanup();
+} catch (err) {
+  console.warn('[cleanup-extension] content.js init error:', err);
+}

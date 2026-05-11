@@ -50,7 +50,11 @@ function cleanup() {
 }
 
 const observer = new MutationObserver(() => {
-  cleanup();
+  try {
+    cleanup();
+  } catch (err) {
+    console.warn('[cleanup-extension] bankofamerica.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {
@@ -58,4 +62,8 @@ observer.observe(document.documentElement, {
   subtree: true
 });
 
-cleanup();
+try {
+  cleanup();
+} catch (err) {
+  console.warn('[cleanup-extension] bankofamerica.js init error:', err);
+}

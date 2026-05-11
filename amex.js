@@ -36,10 +36,18 @@ function cleanup() {
   removeMemberOffers();
 }
 
-cleanup();
+try {
+  cleanup();
+} catch (err) {
+  console.warn('[cleanup-extension] amex.js init error:', err);
+}
 
 const observer = new MutationObserver(() => {
-  cleanup();
+  try {
+    cleanup();
+  } catch (err) {
+    console.warn('[cleanup-extension] amex.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {

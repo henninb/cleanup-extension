@@ -140,36 +140,44 @@ function applyFilter(query) {
 
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
-  const stats = await chrome.runtime.sendMessage({ type: 'GET_DASHBOARD_STATS' });
+  try {
+    const stats = await chrome.runtime.sendMessage({ type: 'GET_DASHBOARD_STATS' });
 
-  renderCards(stats.totalCount, stats.lsTotalCount, stats.dailyStats, stats.domainStats);
-  renderDailyChart(stats.dailyStats);
-  renderHbarChart('domain-chart', topN(stats.domainStats, 12), false);
-  renderHbarChart('name-chart', topN(stats.nameStats, 12), true);
-  renderHbarChart('ls-chart', topN(stats.lsKeyStats, 12), true);
+    renderCards(stats.totalCount, stats.lsTotalCount, stats.dailyStats, stats.domainStats);
+    renderDailyChart(stats.dailyStats);
+    renderHbarChart('domain-chart', topN(stats.domainStats, 12), false);
+    renderHbarChart('name-chart', topN(stats.nameStats, 12), true);
+    renderHbarChart('ls-chart', topN(stats.lsKeyStats, 12), true);
 
-  allLog = stats.log;
-  filteredLog = allLog;
-  renderLog();
-
-  document.getElementById('log-search').addEventListener('input', (e) => {
-    applyFilter(e.target.value);
-  });
-
-  document.getElementById('btn-prev').addEventListener('click', () => {
-    currentPage--;
+    allLog = stats.log;
+    filteredLog = allLog;
     renderLog();
-  });
-  document.getElementById('btn-next').addEventListener('click', () => {
-    currentPage++;
-    renderLog();
-  });
 
-  document.getElementById('btn-clear').addEventListener('click', async () => {
-    if (!confirm('Clear all cookie removal history and stats?')) return;
-    await chrome.runtime.sendMessage({ type: 'CLEAR_LOG' });
-    location.reload();
-  });
+    document.getElementById('log-search').addEventListener('input', (e) => {
+      applyFilter(e.target.value);
+    });
+
+    document.getElementById('btn-prev').addEventListener('click', () => {
+      currentPage--;
+      renderLog();
+    });
+    document.getElementById('btn-next').addEventListener('click', () => {
+      currentPage++;
+      renderLog();
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', async () => {
+      try {
+        if (!confirm('Clear all cookie removal history and stats?')) return;
+        await chrome.runtime.sendMessage({ type: 'CLEAR_LOG' });
+        location.reload();
+      } catch (err) {
+        console.error('[cleanup-extension] Failed to clear log:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[cleanup-extension] Dashboard init failed:', err);
+  }
 }
 
 init();

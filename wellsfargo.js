@@ -19,10 +19,18 @@ function cleanup() {
   removePromotionalImage();
 }
 
-cleanup();
+try {
+  cleanup();
+} catch (err) {
+  console.warn('[cleanup-extension] wellsfargo.js init error:', err);
+}
 
 const observer = new MutationObserver(() => {
-  cleanup();
+  try {
+    cleanup();
+  } catch (err) {
+    console.warn('[cleanup-extension] wellsfargo.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {

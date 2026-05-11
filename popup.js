@@ -85,13 +85,17 @@ function renderSiteCookies(domain, cookies) {
 
   container.querySelectorAll('.remove-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const row = btn.closest('.cookie-row');
-      const url = row.dataset.url;
-      const name = row.dataset.name;
-      await chrome.runtime.sendMessage({ type: 'REMOVE_COOKIE', url, name });
-      row.remove();
-      if (!container.querySelector('.cookie-row')) {
-        container.innerHTML = '<div class="empty">All cookies removed</div>';
+      try {
+        const row = btn.closest('.cookie-row');
+        const url = row.dataset.url;
+        const name = row.dataset.name;
+        await chrome.runtime.sendMessage({ type: 'REMOVE_COOKIE', url, name });
+        row.remove();
+        if (!container.querySelector('.cookie-row')) {
+          container.innerHTML = '<div class="empty">All cookies removed</div>';
+        }
+      } catch (err) {
+        console.error('[cleanup-extension] Failed to remove cookie:', err);
       }
     });
   });
@@ -118,50 +122,66 @@ function escapeHtml(str) {
 }
 
 async function init() {
-  const tab = await getCurrentTab();
-  const { domain, cookies } = await getSiteCookies(tab);
-  renderSiteCookies(domain, cookies);
+  try {
+    const tab = await getCurrentTab();
+    const { domain, cookies } = await getSiteCookies(tab);
+    renderSiteCookies(domain, cookies);
 
-  const stats = await chrome.runtime.sendMessage({ type: 'GET_STATS' });
-  document.getElementById('total-badge').textContent = `${stats.totalCount} removed`;
-  renderLog(stats.log);
+    const stats = await chrome.runtime.sendMessage({ type: 'GET_STATS' });
+    document.getElementById('total-badge').textContent = `${stats.totalCount} removed`;
+    renderLog(stats.log);
 
-  const { enabled } = await chrome.runtime.sendMessage({ type: 'GET_ENABLED' });
-  const toggle = document.getElementById('toggle-enabled');
-  const label = document.getElementById('toggle-label');
-  toggle.checked = enabled;
-  label.textContent = enabled ? 'ON' : 'OFF';
-  label.style.color = enabled ? '#27ae60' : '#888';
+    const { enabled } = await chrome.runtime.sendMessage({ type: 'GET_ENABLED' });
+    const toggle = document.getElementById('toggle-enabled');
+    const label = document.getElementById('toggle-label');
+    toggle.checked = enabled;
+    label.textContent = enabled ? 'ON' : 'OFF';
+    label.style.color = enabled ? '#27ae60' : '#888';
 
-  toggle.addEventListener('change', async () => {
-    const isEnabled = toggle.checked;
-    label.textContent = isEnabled ? 'ON' : 'OFF';
-    label.style.color = isEnabled ? '#27ae60' : '#888';
-    await chrome.runtime.sendMessage({ type: 'SET_ENABLED', enabled: isEnabled });
-  });
+    toggle.addEventListener('change', async () => {
+      try {
+        const isEnabled = toggle.checked;
+        label.textContent = isEnabled ? 'ON' : 'OFF';
+        label.style.color = isEnabled ? '#27ae60' : '#888';
+        await chrome.runtime.sendMessage({ type: 'SET_ENABLED', enabled: isEnabled });
+      } catch (err) {
+        console.error('[cleanup-extension] Failed to update enabled state:', err);
+      }
+    });
 
-  document.getElementById('btn-remove-all').addEventListener('click', async () => {
-    const trackingCookies = cookies.filter(c => isTracking(c.name));
-    for (const c of trackingCookies) {
-      await chrome.runtime.sendMessage({ type: 'REMOVE_COOKIE', url: cookieUrl(c), name: c.name });
-    }
-    // Refresh
-    const { cookies: fresh } = await getSiteCookies(tab);
-    renderSiteCookies(domain, fresh);
-    const updated = await chrome.runtime.sendMessage({ type: 'GET_STATS' });
-    document.getElementById('total-badge').textContent = `${updated.totalCount} removed`;
-    renderLog(updated.log);
-  });
+    document.getElementById('btn-remove-all').addEventListener('click', async () => {
+      try {
+        const trackingCookies = cookies.filter(c => isTracking(c.name));
+        for (const c of trackingCookies) {
+          await chrome.runtime.sendMessage({ type: 'REMOVE_COOKIE', url: cookieUrl(c), name: c.name });
+        }
+        // Refresh
+        const { cookies: fresh } = await getSiteCookies(tab);
+        renderSiteCookies(domain, fresh);
+        const updated = await chrome.runtime.sendMessage({ type: 'GET_STATS' });
+        document.getElementById('total-badge').textContent = `${updated.totalCount} removed`;
+        renderLog(updated.log);
+      } catch (err) {
+        console.error('[cleanup-extension] Failed to remove all tracking cookies:', err);
+      }
+    });
 
-  document.getElementById('btn-clear-log').addEventListener('click', async () => {
-    await chrome.runtime.sendMessage({ type: 'CLEAR_LOG' });
-    document.getElementById('total-badge').textContent = '0 removed';
-    renderLog([]);
-  });
+    document.getElementById('btn-clear-log').addEventListener('click', async () => {
+      try {
+        await chrome.runtime.sendMessage({ type: 'CLEAR_LOG' });
+        document.getElementById('total-badge').textContent = '0 removed';
+        renderLog([]);
+      } catch (err) {
+        console.error('[cleanup-extension] Failed to clear log:', err);
+      }
+    });
 
-  document.getElementById('btn-dashboard').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
-  });
+    document.getElementById('btn-dashboard').addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+    });
+  } catch (err) {
+    console.error('[cleanup-extension] Popup init failed:', err);
+  }
 }
 
 init();

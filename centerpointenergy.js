@@ -33,7 +33,11 @@ function run() {
 }
 
 const observer = new MutationObserver(() => {
-  run();
+  try {
+    run();
+  } catch (err) {
+    console.warn('[cleanup-extension] centerpointenergy.js observer error:', err);
+  }
 });
 
 observer.observe(document.documentElement, {
@@ -41,4 +45,8 @@ observer.observe(document.documentElement, {
   subtree: true
 });
 
-run();
+try {
+  run();
+} catch (err) {
+  console.warn('[cleanup-extension] centerpointenergy.js init error:', err);
+}

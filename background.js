@@ -65,6 +65,11 @@ function logRemoval(cookie) {
     const today = new Date().toISOString().slice(0, 10);
     const domain = cookie.domain.replace(/^\./, '');
     chrome.storage.local.get(['removedLog', 'totalCount', 'domainStats', 'nameStats', 'dailyStats'], (data) => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] logRemoval read error: ${chrome.runtime.lastError.message}`);
+        resolve();
+        return;
+      }
       const log = data.removedLog || [];
       const domainStats = data.domainStats || {};
       const nameStats = data.nameStats || {};
@@ -89,7 +94,12 @@ function logRemoval(cookie) {
         domainStats,
         nameStats,
         dailyStats,
-      }, resolve);
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn(`[cookie-cleaner] logRemoval write error: ${chrome.runtime.lastError.message}`);
+        }
+        resolve();
+      });
     });
   }));
 }
@@ -101,6 +111,10 @@ chrome.cookies.onChanged.addListener((changeInfo) => {
   if (!isTrackingCookie(cookie.name)) return;
 
   chrome.storage.local.get(['enabled'], (data) => {
+    if (chrome.runtime.lastError) {
+      console.warn(`[cookie-cleaner] onChanged: storage read error: ${chrome.runtime.lastError.message}`);
+      return;
+    }
     if (data.enabled === false) return;
 
     const url = cookieUrl(cookie);
@@ -119,6 +133,11 @@ chrome.cookies.onChanged.addListener((changeInfo) => {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'GET_STATS') {
     chrome.storage.local.get(['removedLog', 'totalCount'], (data) => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] GET_STATS error: ${chrome.runtime.lastError.message}`);
+        sendResponse({ log: [], totalCount: 0 });
+        return;
+      }
       sendResponse({ log: data.removedLog || [], totalCount: data.totalCount || 0 });
     });
     return true;
@@ -128,6 +147,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     chrome.storage.local.get(
       ['removedLog', 'totalCount', 'domainStats', 'nameStats', 'dailyStats', 'lsTotalCount', 'lsKeyStats'],
       (data) => {
+        if (chrome.runtime.lastError) {
+          console.warn(`[cookie-cleaner] GET_DASHBOARD_STATS error: ${chrome.runtime.lastError.message}`);
+          sendResponse({ log: [], totalCount: 0, domainStats: {}, nameStats: {}, dailyStats: {}, lsTotalCount: 0, lsKeyStats: {} });
+          return;
+        }
         sendResponse({
           log: data.removedLog || [],
           totalCount: data.totalCount || 0,
@@ -146,9 +170,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     // Validate key: non-empty string, max 200 chars to prevent storage exhaustion
     const key = typeof msg.key === 'string' && msg.key.length > 0 && msg.key.length <= 200
       ? msg.key : null;
-    if (!key) return false;
+    if (!key) {
+      console.warn('[cookie-cleaner] LS_EVENT: invalid or oversized key dropped', msg.key);
+      return false;
+    }
 
     chrome.storage.local.get(['lsTotalCount', 'lsKeyStats'], (data) => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] LS_EVENT read error: ${chrome.runtime.lastError.message}`);
+        return;
+      }
       const lsKeyStats = data.lsKeyStats || {};
       // Cap at 1000 unique keys to bound storage usage
       if (!lsKeyStats[key] && Object.keys(lsKeyStats).length >= 1000) return;
@@ -156,13 +187,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       chrome.storage.local.set({
         lsTotalCount: (data.lsTotalCount || 0) + 1,
         lsKeyStats,
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn(`[cookie-cleaner] LS_EVENT write error: ${chrome.runtime.lastError.message}`);
+        }
       });
     });
     return false; // no response needed
   }
 
   if (msg.type === 'REMOVE_COOKIE') {
+    if (typeof msg.url !== 'string' || typeof msg.name !== 'string') {
+      console.warn('[cookie-cleaner] REMOVE_COOKIE: invalid url or name', msg.url, msg.name);
+      sendResponse({ ok: false });
+      return true;
+    }
     chrome.cookies.remove({ url: msg.url, name: msg.name }, () => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] REMOVE_COOKIE failed for "${msg.name}": ${chrome.runtime.lastError.message}`);
+      }
       sendResponse({ ok: !chrome.runtime.lastError });
     });
     return true;
@@ -170,13 +213,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   if (msg.type === 'GET_ENABLED') {
     chrome.storage.local.get(['enabled'], (data) => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] GET_ENABLED error: ${chrome.runtime.lastError.message}`);
+        sendResponse({ enabled: true });
+        return;
+      }
       sendResponse({ enabled: data.enabled !== false });
     });
     return true;
   }
 
   if (msg.type === 'SET_ENABLED') {
-    chrome.storage.local.set({ enabled: msg.enabled }, () => sendResponse({ ok: true }));
+    chrome.storage.local.set({ enabled: msg.enabled }, () => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] SET_ENABLED error: ${chrome.runtime.lastError.message}`);
+        sendResponse({ ok: false });
+        return;
+      }
+      sendResponse({ ok: true });
+    });
     return true;
   }
 
@@ -184,7 +239,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     chrome.storage.local.set({
       removedLog: [], totalCount: 0, domainStats: {}, nameStats: {}, dailyStats: {},
       lsTotalCount: 0, lsKeyStats: {},
-    }, () => sendResponse({ ok: true }));
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.warn(`[cookie-cleaner] CLEAR_LOG error: ${chrome.runtime.lastError.message}`);
+        sendResponse({ ok: false });
+        return;
+      }
+      sendResponse({ ok: true });
+    });
     return true;
   }
 });
+
+console.log('[cookie-cleaner] Service worker initialized');
