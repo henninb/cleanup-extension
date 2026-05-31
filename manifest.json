@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cleanup Extension",
-  "version": "1.3.1",
+  "version": "1.3.3",
   "description": "Removes unwanted popups and auto-deletes tracking cookies",
   "permissions": ["cookies", "storage", "tabs", "declarativeNetRequest"],
   "content_security_policy": {
@@ -23,6 +23,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": ["*://*.adp.com/*"],
       "js": ["ls-guard.js"],
       "run_at": "document_start",
       "world": "MAIN",
@@ -30,6 +31,7 @@
     },
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": ["*://*.adp.com/*"],
       "js": ["ls-reporter.js"],
       "run_at": "document_start",
       "all_frames": true

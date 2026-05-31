@@ -176,6 +176,8 @@ async function init() {
       }
     });
 
+    document.getElementById('version-label').textContent = `v${chrome.runtime.getManifest().version}`;
+
     document.getElementById('btn-dashboard').addEventListener('click', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
     });

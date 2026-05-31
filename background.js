@@ -1,6 +1,15 @@
 'use strict';
 
 // Known tracking cookie name patterns
+const EXEMPT_DOMAINS = [
+  'adp.com',
+];
+
+function isExemptDomain(cookieDomain) {
+  const domain = cookieDomain.replace(/^\./, '');
+  return EXEMPT_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));
+}
+
 const TRACKING_PATTERNS = [
   // Google Analytics
   /^_ga$/, /^_gid$/, /^_gat/, /^__utma$/, /^__utmb$/, /^__utmc$/, /^__utmz$/, /^__utmt$/,
@@ -108,6 +117,7 @@ chrome.cookies.onChanged.addListener((changeInfo) => {
   if (changeInfo.removed) return;
 
   const cookie = changeInfo.cookie;
+  if (isExemptDomain(cookie.domain)) return;
   if (!isTrackingCookie(cookie.name)) return;
 
   chrome.storage.local.get(['enabled'], (data) => {
